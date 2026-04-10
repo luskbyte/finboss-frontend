@@ -48,7 +48,7 @@ export interface DashboardSummary {
     portfolio_value: number
     portfolio_return: number
     income_by_category: Record<string, number>
-    expenses_by_category: Record<string, number>
+    expense_by_category: Record<string, number>
     monthly_balance: MonthlyBalance[]
 }
 
