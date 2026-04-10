@@ -25,13 +25,29 @@ const categoryLabels: Record<string, string> = {
 }
 
 export default function Dashboard() {
-    const { data, isLoading } = useQuery({
+    const { data, isLoading, isError } = useQuery({
         queryKey: ['dashboard'],
-        queryFn: () => dashboardApi.getSummary(new Date().getFullYear()),    
+        queryFn: () => dashboardApi.getSummary(new Date().getFullYear()),
     })
 
-    if (isLoading || !data) {
+    if (isLoading) {
         return <div className="text-text-muted">Carregando...</div>
+    }
+
+    if (isError) {
+        return (
+            <div className="rounded-xl border border-border bg-surface p-5 text-sm text-text-muted">
+                Não foi possível carregar o dashboard agora.
+            </div>
+        )
+    }
+
+    if (!data) {
+        return (
+            <div className="rounded-xl border border-border bg-surface p-5 text-sm text-text-muted">
+                Nenhum dado disponível para o dashboard.
+            </div>
+        )
     }
 
     const expensePie = Object.entries(data.expense_by_category || {}).map(([k, v], i) => ({
@@ -40,9 +56,7 @@ export default function Dashboard() {
         fill: COLORS[i % COLORS.length],
     }))
 
-    const sortedMonthly = [...(data.monthly_balance || [])].sort((a, b) =>
-        a.month.localeCompare(b.month)
-    )
+    const sortedMonthly = data.monthly_balance || []
 
     return (
         <div className="flex flex-col gap-6">
@@ -92,7 +106,7 @@ export default function Dashboard() {
                             />
                             <Bar dataKey="income" name="Receita" fill="#22c55e" radius={[4, 4, 0, 0]} />
 
-                            <Bar dataKey="expense" name="Despesa" fill="#ef4444" radius={[4, 4, 0, 0]} />
+                            <Bar dataKey="expenses" name="Despesa" fill="#ef4444" radius={[4, 4, 0, 0]} />
                         </BarChart>
                     </ResponsiveContainer>
                 </div>

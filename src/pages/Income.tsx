@@ -28,10 +28,11 @@ export default function IncomePage() {
     const [editing, setEditing] = useState<Income | null>(null);
     const [form, setForm] = useState<IncomePayload>({ ...emptyForm });
 
-    const { data = [], isLoading } = useQuery({
+    const { data, isLoading } = useQuery({
         queryKey: ["incomes"],
         queryFn: incomeApi.list,
     });
+    const incomes = data ?? [];
 
     const closeModal = () => {
         setModal(null);
@@ -71,7 +72,7 @@ export default function IncomePage() {
             description: income.description,
             amount: income.amount,
             category: income.category,
-            date: income.date.slice(0, 10),
+            date: (income.date ?? new Date().toISOString()).slice(0, 10),
             recurring: income.recurring,
         });
         setModal("edit");
@@ -83,7 +84,7 @@ export default function IncomePage() {
         setModal("create");
     };
 
-    const handleSubmit = () => (e: React.SyntheticEvent) => {
+    const handleSubmit = (e: React.SyntheticEvent<HTMLFormElement>) => {
         e.preventDefault();
 
         const payload: IncomePayload = {
@@ -100,9 +101,9 @@ export default function IncomePage() {
         createMutation.mutate(payload);
     };
 
-    const total = data.reduce((sum, income) => sum + income.amount, 0);
-    const recurringCount = data.filter((income) => income.recurring).length;
-    const monthTotal = data
+    const total = incomes.reduce((sum, income) => sum + income.amount, 0);
+    const recurringCount = incomes.filter((income) => income.recurring).length;
+    const monthTotal = incomes
         .filter((income) => new Date(income.date).getMonth() === new Date().getMonth())
         .reduce((sum, income) => sum + income.amount, 0);
     const isSubmitting = createMutation.isPending || updateMutation.isPending;
@@ -129,7 +130,7 @@ export default function IncomePage() {
                 <StatCard
                     title="Receita Total"
                     value={fmt(total)}
-                    subtitle={`${data.length} lançamento(s)`}
+                    subtitle={`${incomes.length} lançamento(s)`}
                     icon={<TrendingUp size={18} />}
                     color="var(--green)"
                 />
@@ -152,7 +153,7 @@ export default function IncomePage() {
             <div className="bg-surface border border-border rounded-xl shadow-[0_4px_24px_rgba(0,0,0,0.4)] overflow-hidden">
                 {isLoading ? (
                     <div className="p-10 text-center text-text-muted">Carregando receitas...</div>
-                ) : data.length === 0 ? (
+                ) : incomes.length === 0 ? (
                     <div className="py-14 text-center text-text-muted">
                         <TrendingUp size={40} className="mx-auto mb-3 opacity-30" />
                         <p className="font-medium">Nenhuma receita registrada</p>
@@ -172,7 +173,7 @@ export default function IncomePage() {
                                 </tr>
                             </thead>
                             <tbody>
-                                {data.map((income) => (
+                                {incomes.map((income) => (
                                     <tr key={income.id} className="border-t border-border">
                                         <td className="px-4 py-3 font-medium">{income.description}</td>
                                         <td className="px-4 py-3">
